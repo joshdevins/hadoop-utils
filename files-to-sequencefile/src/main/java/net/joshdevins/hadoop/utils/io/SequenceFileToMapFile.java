@@ -12,14 +12,18 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
 
 /**
- * Converts a {@link SequenceFile} into a {@link MapFile}. This will move the input sequence file to the location
- * specified in the output mapfile. The filesystem to operate on is specified by the input. So you must stay within the
- * same filesystem.
+ * Converts a {@link SequenceFile} into a {@link MapFile}. This will move the input {@link SequenceFile} to the location
+ * specified by the output {@link MapFile}. The filesystem to operate on is specified by the input, so you must stay
+ * within the same filesystem (i.e. local-to-local, HDFS-to-HDFS).
  * 
- * i.e. input = sequencefiles/part-r-00000, output = mapfiles/00000, final result = mapfiles/00000/data,
- * mapfiles/00000/index
+ * Example:
+ * <ul>
+ * <li>input: sequencefiles/part-r-00000</li>
+ * <li>output: mapfiles/00000</li>
+ * <li>final result: mapfiles/00000/data, mapfiles/00000/index</li>
+ * </ul>
  * 
- * @see "Hadoop: The Definitive Guide", Tom White, p. 127 -- Converting a SequenceFile to a MapFile
+ * @see "Hadoop: The Definitive Guide", 2nd Ed., Tom White, p. 127 -- Converting a SequenceFile to a MapFile
  * 
  * @author Josh Devins
  */

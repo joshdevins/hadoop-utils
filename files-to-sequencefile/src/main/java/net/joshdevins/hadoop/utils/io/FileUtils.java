@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Simple file based utilities for regular filesystems and HDFS.
+ * Simple file based utilities for regular filesystems.
  * 
  * @author Josh Devins
  */
@@ -14,6 +14,54 @@ public final class FileUtils {
 
     private FileUtils() {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Recursively deletes a directory and all its' contents.
+     * 
+     * @return true if the deletion was successful, false otherwise
+     * 
+     * @see http://www.java2s.com/Tutorial/Java/0180__File/Removeadirectoryandallofitscontents.htm
+     */
+    public static boolean deleteDirectory(final File directory) {
+
+        if (directory == null) {
+            return false;
+        }
+
+        if (!directory.exists()) {
+            return true;
+        }
+
+        if (!directory.isDirectory()) {
+            return false;
+        }
+
+        String[] list = directory.list();
+
+        if (list != null) {
+            for (String element : list) {
+
+                File entry = new File(directory, element);
+
+                if (entry.isDirectory()) {
+                    if (!deleteDirectory(entry)) {
+                        return false;
+                    }
+
+                } else {
+                    if (!entry.delete()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return directory.delete();
+    }
+
+    public static boolean deleteDirectory(final String directory) {
+        return deleteDirectory(new File(directory));
     }
 
     /**
