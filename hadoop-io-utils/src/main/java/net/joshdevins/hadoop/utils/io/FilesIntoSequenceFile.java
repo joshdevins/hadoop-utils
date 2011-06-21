@@ -31,6 +31,7 @@ public final class FilesIntoSequenceFile {
 
     public static void main(final String[] args) {
 
+        Validate.notNull(args, USAGE);
         Validate.isTrue(args.length == 2, USAGE);
 
         try {

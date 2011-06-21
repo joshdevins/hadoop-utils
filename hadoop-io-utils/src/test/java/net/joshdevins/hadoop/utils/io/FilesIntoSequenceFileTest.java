@@ -28,29 +28,29 @@ public class FilesIntoSequenceFileTest {
     public void testRun() throws IOException {
 
         FilesIntoSequenceFile.run("src/test/resources/input", TEST_OUTPUT);
-        List<String[]> entries = readSequenceFile(TEST_OUTPUT);
+        List<Pair<String, String>> entries = readSequenceFile(TEST_OUTPUT);
 
         Assert.assertNotNull(entries);
         Assert.assertEquals(3, entries.size());
 
         for (int i = 0; i < entries.size(); i++) {
 
-            String[] entry = entries.get(i);
-            String key = entry[0];
-            String value = entry[1];
+            Pair<String, String> entry = entries.get(i);
+            String key = entry.getKey();
+            String value = entry.getValue();
 
             Assert.assertEquals(i + ".txt", key);
             Assert.assertEquals("Contents of file " + i, value);
         }
     }
 
-    private List<String[]> readSequenceFile(final String uri) throws IOException {
+    private List<Pair<String, String>> readSequenceFile(final String uri) throws IOException {
 
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(URI.create(uri), conf);
         Path path = new Path(uri);
         SequenceFile.Reader reader = null;
-        List<String[]> list = new LinkedList<String[]>();
+        List<Pair<String, String>> list = new LinkedList<Pair<String, String>>();
 
         try {
             reader = new SequenceFile.Reader(fs, path, conf);
@@ -62,7 +62,7 @@ public class FilesIntoSequenceFileTest {
                 byte[] bytes = new byte[value.getLength()];
                 System.arraycopy(value.getBytes(), 0, bytes, 0, value.getLength());
 
-                list.add(new String[] { key.toString(), new String(bytes) });
+                list.add(new Pair<String, String>(key.toString(), new String(bytes)));
             }
 
         } finally {

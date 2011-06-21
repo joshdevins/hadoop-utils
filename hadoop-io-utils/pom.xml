@@ -101,6 +101,13 @@
             <version>2.5</version>
         </dependency>
 
+        <!-- COMMS -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>7.4.2.v20110526</version>
+        </dependency>
+
         <!-- TEST -->
         <dependency>
             <groupId>junit</groupId>
@@ -108,7 +115,7 @@
             <version>4.8.1</version>
             <scope>test</scope>
         </dependency>
-   </dependencies>
+    </dependencies>
 
     <build>
         <plugins>
