@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.joshdevins.hadoop.utils</groupId>
-    <artifactId>files-to-sequencefile</artifactId>
+    <artifactId>hadoop-io-utils</artifactId>
     <version>1</version>
     <packaging>jar</packaging>
 
-    <name>Hadoop Utils : Files to SequenceFile</name>
+    <name>Hadoop Utils : IO</name>
 
     <dependencies>
         <!-- HADOOP -->
@@ -140,11 +140,6 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>net.joshdevins.hadoop.utils.io.FilesIntoSequenceFile</mainClass>
-                        </manifest>
-                    </archive>
                 </configuration>
             </plugin>
         </plugins>
