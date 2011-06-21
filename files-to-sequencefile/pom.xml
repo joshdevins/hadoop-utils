@@ -142,7 +142,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass></mainClass>
+                            <mainClass>net.joshdevins.hadoop.utils.io.FilesIntoSequenceFile</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
