@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BloomMapFile;
 import org.apache.hadoop.io.BloomMapFile.Reader;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -77,9 +78,14 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
             // check the bloom filter first, then try to get from the mapfile
             try {
-                if (reader.probablyHasKey(key) && reader.get(key, value) != null) {
-                    found = true;
-                    break;
+                try {
+                    if (reader.probablyHasKey(key) && reader.get(key, value) != null) {
+                        found = true;
+                        break;
+                    }
+
+                } finally {
+                    IOUtils.closeStream(reader);
                 }
             } catch (IOException ioe) {
                 throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
