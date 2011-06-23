@@ -36,8 +36,8 @@ public class FilesIntoSequenceFileTest {
         for (int i = 0; i < entries.size(); i++) {
 
             Pair<String, String> entry = entries.get(i);
-            String key = entry.getKey();
-            String value = entry.getValue();
+            String key = entry.getA();
+            String value = entry.getB();
 
             Assert.assertEquals(i + ".txt", key);
             Assert.assertEquals("Contents of file " + i, value);

@@ -17,6 +17,15 @@ public final class FileUtils {
     }
 
     /**
+     * Creates a directory and deletes it if it already exists.
+     */
+    public static boolean createDirectoryDestructive(final String directory) {
+
+        deleteDirectory(directory);
+        return new File(directory).mkdirs();
+    }
+
+    /**
      * Recursively deletes a directory and all its' contents.
      * 
      * @return true if the deletion was successful, false otherwise
