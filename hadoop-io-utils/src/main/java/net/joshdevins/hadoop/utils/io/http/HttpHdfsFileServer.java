@@ -33,7 +33,7 @@ public class HttpHdfsFileServer {
         }
     }
 
-    private static void run(final int port, final String rootPathInFileSystem) {
+    static void run(final int port, final String rootPathInFileSystem) {
 
         Handler handler = null;
         try {

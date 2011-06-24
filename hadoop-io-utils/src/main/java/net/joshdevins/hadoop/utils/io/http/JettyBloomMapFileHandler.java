@@ -148,8 +148,9 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
         for (FileStatus fileStatus : files) {
 
-            // skip any sub-directories for now
-            if (fileStatus.isDir()) {
+            // skip any raw files since BloomMap files are actually directories
+            // skip any sub-directories for now that are not BloomMapFile directories
+            if (!fileStatus.isDir() || !isBloomMapFile(fileStatus)) {
                 continue;
             }
 
@@ -180,5 +181,34 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         String filename = target.substring(splitAt + 1);
 
         return new Pair<String, String>(dataset, filename);
+    }
+
+    /**
+     * Determine if a directory is actually a {@link BloomMapFile}. This is based on the existence of exactly three
+     * files named: bloom, index, data
+     */
+    private boolean isBloomMapFile(final FileStatus fileStatus) {
+
+        Path path = fileStatus.getPath();
+        try {
+            FileStatus[] files = getFileSystem().listStatus(path);
+            Set<String> fileNames = new HashSet<String>(files.length);
+
+            for (FileStatus file : files) {
+
+                if (file.isDir()) {
+                    return false;
+                }
+
+                fileNames.add(file.getPath().getName());
+            }
+
+            return fileNames.size() == 3 && fileNames.contains("bloom") && fileNames.contains("index")
+                    && fileNames.contains("data");
+
+        } catch (IOException ioe) {
+            throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Error listing files in subdirectory of dataset", ioe);
+        }
     }
 }
