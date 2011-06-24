@@ -78,5 +78,6 @@ public class HttpHdfsFileServerTest {
     public void testSuccess() throws Exception {
 
         Assert.assertEquals("Contents of file 0", makeHttpGetRequest("/dataset/0.txt"));
+        Assert.assertEquals("Contents of file 1", makeHttpGetRequest("/dataset/1.txt"));
     }
 }

@@ -8,7 +8,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
@@ -81,7 +80,7 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
             String errorString = "Error " + hee.getStatusCode();
 
             PrintWriter writer = response.getWriter();
-            writer.println("<html><head><title>" + errorString + "<title></head><body>");
+            writer.println("<html><head><title>" + errorString + "</title></head><body>");
             writer.println("<h2>" + errorString + "</h2>");
 
             if (!StringUtils.isBlank(hee.getMessage())) {

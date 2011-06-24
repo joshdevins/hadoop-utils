@@ -31,7 +31,7 @@ public class FilesIntoSequenceFileTest {
         List<Pair<String, String>> entries = readSequenceFile(TEST_OUTPUT);
 
         Assert.assertNotNull(entries);
-        Assert.assertEquals(3, entries.size());
+        Assert.assertEquals(5, entries.size());
 
         for (int i = 0; i < entries.size(); i++) {
 
@@ -39,8 +39,10 @@ public class FilesIntoSequenceFileTest {
             String key = entry.getA();
             String value = entry.getB();
 
-            Assert.assertEquals(i + ".txt", key);
-            Assert.assertEquals("Contents of file " + i, value);
+            if (key.matches(".txt")) {
+                Assert.assertEquals(i + ".txt", key);
+                Assert.assertEquals("Contents of file " + i, value);
+            }
         }
     }
 
