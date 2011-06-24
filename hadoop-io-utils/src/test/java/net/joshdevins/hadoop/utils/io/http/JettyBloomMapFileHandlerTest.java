@@ -1,6 +1,9 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
+
+import net.joshdevins.hadoop.utils.io.FileUtils;
+import net.joshdevins.hadoop.utils.io.Pair;
 
 import org.junit.Assert;
 import org.junit.Before;

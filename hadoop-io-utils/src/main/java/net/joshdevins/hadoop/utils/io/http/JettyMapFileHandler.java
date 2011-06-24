@@ -1,4 +1,4 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
 import java.util.HashMap;

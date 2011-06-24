@@ -1,4 +1,6 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.http;
+
+import net.joshdevins.hadoop.utils.io.http.AbstractJettyHdfsFileHandler;
 
 import org.junit.Assert;
 import org.junit.Test;

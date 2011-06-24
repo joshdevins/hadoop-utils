@@ -1,6 +1,9 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
+
+import net.joshdevins.hadoop.utils.io.ExitException;
+import net.joshdevins.hadoop.utils.io.MainUtils;
 
 import org.apache.commons.lang.Validate;
 import org.eclipse.jetty.server.Handler;
