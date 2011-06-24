@@ -8,6 +8,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.BloomMapFile;
+import org.apache.hadoop.io.BloomMapFileWriter;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
@@ -56,10 +57,10 @@ public final class FilesIntoBloomMapFile {
         File[] inputFiles = FilesIntoSequenceFile.getInputFiles(input);
 
         // setup output file, no compression
-        BloomMapFile.Writer writer = null;
+        BloomMapFileWriter writer = null;
         try {
             FileSystem outputFS = FileSystem.get(URI.create(output), conf);
-            writer = new BloomMapFile.Writer(conf, outputFS, output, Text.class, BytesWritable.class,
+            writer = new BloomMapFileWriter(conf, outputFS, output, Text.class, BytesWritable.class,
                     CompressionType.NONE);
 
         } catch (IOException ioe) {
@@ -89,7 +90,7 @@ public final class FilesIntoBloomMapFile {
      * Appends the file to the writer. IOExceptions will all be caught internally and any errors printed to stderr. This
      * is to aid in simply skipping errors and moving along.
      */
-    static boolean appendFileToWriter(final File file, final BloomMapFile.Writer writer) {
+    static boolean appendFileToWriter(final File file, final BloomMapFileWriter writer) {
 
         String key = file.getName();
 

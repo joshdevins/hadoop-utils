@@ -15,7 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BloomMapFile;
-import org.apache.hadoop.io.BloomMapFile.Reader;
+import org.apache.hadoop.io.BloomMapFileReader;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.eclipse.jetty.server.Handler;
@@ -35,7 +35,7 @@ import com.google.common.collect.MapMaker;
  */
 public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
-    private final ConcurrentMap<String, Set<BloomMapFile.Reader>> datasetMap;
+    private final ConcurrentMap<String, Set<BloomMapFileReader>> datasetMap;
 
     public JettyBloomMapFileHandler(final String rootPathInFileSystem) throws IOException {
         super(rootPathInFileSystem);
@@ -62,7 +62,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         String datasetFilenameDebugString = "dataset=" + dataset + " filename=" + filename;
 
         // get the readers for this dataset
-        Set<BloomMapFile.Reader> readers = datasetMap.get(dataset);
+        Set<BloomMapFileReader> readers = datasetMap.get(dataset);
 
         // need to get the readers
         if (readers == null) {
@@ -77,11 +77,11 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         Text key = new Text(filename);
         boolean found = false;
 
-        for (BloomMapFile.Reader reader : readers) {
+        for (BloomMapFileReader reader : readers) {
 
-            // check the bloom filter first, then try to get from the mapfile
+            // try to get from the mapfile, internally this hits the bloom filter first
             try {
-                if (reader.probablyHasKey(key) && reader.get(key, value) != null) {
+                if (reader.get(key, value) != null) {
                     found = true;
                     break;
                 }
@@ -114,9 +114,9 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         ((Request) request).setHandled(true);
     }
 
-    Set<Reader> getReadersForDataset(final String dataset) {
+    Set<BloomMapFileReader> getReadersForDataset(final String dataset) {
 
-        Set<Reader> readers = new HashSet<BloomMapFile.Reader>();
+        Set<BloomMapFileReader> readers = new HashSet<BloomMapFileReader>();
 
         // verify dataset
         Path datasetPath = new Path(getRootPathInFileSystem() + dataset);
@@ -152,7 +152,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
             Path path = fileStatus.getPath();
             try {
-                readers.add(new BloomMapFile.Reader(getFileSystem(), path.toString(), getConfiguration()));
+                readers.add(new BloomMapFileReader(getFileSystem(), path.toString(), getConfiguration()));
 
             } catch (IOException ioe) {
                 throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,

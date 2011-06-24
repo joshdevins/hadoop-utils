@@ -58,8 +58,17 @@ public class JettyBloomMapFileHandlerTest {
         };
         Mockito.when(mockResponse.getOutputStream()).thenReturn(os);
 
+        // this sequence of file gets causes last file to not be found in the bloom filter
         handler.handleWithExceptionTranslation("/dataset/1.txt", baseRequest, mockRequest, mockResponse);
         Assert.assertEquals("Contents of file 1", baos.toString());
+        baos.reset();
+
+        handler.handleWithExceptionTranslation("/dataset/file.jpg", baseRequest, mockRequest, mockResponse);
+        baos.reset();
+
+        handler.handleWithExceptionTranslation("/dataset/1.txt", baseRequest, mockRequest, mockResponse);
+        Assert.assertEquals("Contents of file 1", baos.toString());
+        baos.reset();
     }
 
     @Test

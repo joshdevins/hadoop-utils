@@ -5,7 +5,7 @@ import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.BloomMapFile;
+import org.apache.hadoop.io.BloomMapFileReader;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
@@ -29,7 +29,7 @@ public class FilesIntoBloomMapFileTest {
         // test results
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(URI.create(TEST_OUTPUT), conf);
-        BloomMapFile.Reader reader = new BloomMapFile.Reader(fs, TEST_OUTPUT, conf);
+        BloomMapFileReader reader = new BloomMapFileReader(fs, TEST_OUTPUT, conf);
 
         Assert.assertNotNull(reader);
 
