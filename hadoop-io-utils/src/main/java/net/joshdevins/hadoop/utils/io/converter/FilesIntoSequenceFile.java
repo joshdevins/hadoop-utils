@@ -1,6 +1,8 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.converter;
 
 import java.io.IOException;
+
+import net.joshdevins.hadoop.utils.io.ExitException;
 
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.fs.FileSystem;

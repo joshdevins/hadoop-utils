@@ -1,9 +1,13 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.converter;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+
+import net.joshdevins.hadoop.utils.io.FileUtils;
+import net.joshdevins.hadoop.utils.io.SequenceFileToMapFile;
+import net.joshdevins.hadoop.utils.io.converter.FilesIntoSequenceFile;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;

@@ -8,8 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.joshdevins.hadoop.utils.io.FileUtils;
-import net.joshdevins.hadoop.utils.io.FilesIntoBloomMapFile;
 import net.joshdevins.hadoop.utils.io.Pair;
+import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
 
 import org.eclipse.jetty.server.Request;
 import org.junit.Assert;

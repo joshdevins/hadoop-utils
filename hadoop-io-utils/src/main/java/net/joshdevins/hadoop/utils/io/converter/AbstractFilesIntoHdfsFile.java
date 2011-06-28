@@ -1,9 +1,12 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.converter;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+
+import net.joshdevins.hadoop.utils.io.FileUtils;
+import net.joshdevins.hadoop.utils.io.MainUtils;
 
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;

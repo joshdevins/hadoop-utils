@@ -1,7 +1,9 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils.io.converter;
 
 import java.io.IOException;
 import java.net.URI;
+
+import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;

@@ -7,7 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import net.joshdevins.hadoop.utils.io.FileUtils;
-import net.joshdevins.hadoop.utils.io.FilesIntoBloomMapFile;
+import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
 
 import org.junit.After;
 import org.junit.Assert;
