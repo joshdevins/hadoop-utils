@@ -18,13 +18,14 @@ public class FilesIntoBloomMapFileTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testBadArgs() {
-        FilesIntoBloomMapFile.run(null, null);
+        new FilesIntoBloomMapFile(null, null);
     }
 
     @Test
     public void testRun() throws IOException {
 
-        FilesIntoBloomMapFile.run("src/test/resources/input", TEST_OUTPUT);
+        FilesIntoBloomMapFile runner = new FilesIntoBloomMapFile("src/test/resources/input", TEST_OUTPUT);
+        runner.run();
 
         // test results
         Configuration conf = new Configuration();

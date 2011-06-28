@@ -35,14 +35,15 @@ public class SequenceFileToMapFileTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testBadArgs() {
-        FilesIntoSequenceFile.run(null, null);
+        SequenceFileToMapFile.run(null, null);
     }
 
     @Test
     public void testRun() throws IOException {
 
         // build a SequenceFile from a bunch of text files
-        FilesIntoSequenceFile.run("src/test/resources/input", TEST_INPUT);
+        FilesIntoSequenceFile runner = new FilesIntoSequenceFile("src/test/resources/input", TEST_INPUT);
+        runner.run();
 
         // convert it to a MapFile
         SequenceFileToMapFile.run(TEST_INPUT, TEST_OUTPUT);

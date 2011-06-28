@@ -41,7 +41,9 @@ public class JettyBloomMapFileHandlerTest {
         mockResponse = Mockito.mock(HttpServletResponse.class);
 
         // move text files into BloomMapFile in test output directory
-        FilesIntoBloomMapFile.run("src/test/resources/input", TEST_OUTPUT + "/dataset/bloom.map");
+        FilesIntoBloomMapFile runner = new FilesIntoBloomMapFile("src/test/resources/input", TEST_OUTPUT
+                + "/dataset/bloom.map");
+        runner.run();
     }
 
     @Test

@@ -21,13 +21,14 @@ public class FilesIntoSequenceFileTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testBadArgs() {
-        FilesIntoSequenceFile.run(null, null);
+        new FilesIntoSequenceFile(null, null);
     }
 
     @Test
     public void testRun() throws IOException {
 
-        FilesIntoSequenceFile.run("src/test/resources/input", TEST_OUTPUT);
+        FilesIntoSequenceFile runner = new FilesIntoSequenceFile("src/test/resources/input", TEST_OUTPUT);
+        runner.run();
         List<Pair<String, String>> entries = readSequenceFile(TEST_OUTPUT);
 
         Assert.assertNotNull(entries);
