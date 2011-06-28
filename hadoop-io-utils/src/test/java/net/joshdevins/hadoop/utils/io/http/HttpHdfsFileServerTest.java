@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.ServerSocket;
 import java.net.URL;
 
 import net.joshdevins.hadoop.utils.io.FileUtils;
@@ -18,18 +19,25 @@ public class HttpHdfsFileServerTest {
 
     private static class Runner extends Thread {
 
+        private final HttpHdfsFileServer server;
+
+        private Runner(final HttpHdfsFileServer server) {
+            this.server = server;
+        }
+
         @Override
         public void run() {
-            // TODO: port to run on should be randomized
-            HttpHdfsFileServer.run(TEST_PORT, TEST_ROOT);
+            server.run();
         }
     }
 
-    private static final int TEST_PORT = 8645;
-
     private static final String TEST_ROOT = "target/test/output/HttpHdfsFileServerTest";
 
+    private HttpHdfsFileServer server;
+
     private Runner runner;
+
+    private int port;
 
     @SuppressWarnings("deprecation")
     @After
@@ -47,15 +55,25 @@ public class HttpHdfsFileServerTest {
                 + "/dataset/bloom.map");
         setup.run();
 
+        // create the server
+        port = getRandomUnusedPort();
+        server = new HttpHdfsFileServer(port, TEST_ROOT);
+
         // run the server
-        runner = new Runner();
+        runner = new Runner(server);
         runner.start();
-        Thread.sleep(1000);
+
+        while (server.getJettyServer().isStarting()) {
+            Thread.sleep(100);
+        }
+
+        // for good measure
+        Thread.sleep(100);
     }
 
     public String makeHttpGetRequest(final String path) throws IOException {
 
-        URL url = new URL("http://localhost:" + TEST_PORT + path);
+        URL url = new URL("http://localhost:" + port + path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         connection.setRequestMethod("GET");
@@ -81,5 +99,30 @@ public class HttpHdfsFileServerTest {
 
         Assert.assertEquals("Contents of file 0", makeHttpGetRequest("/dataset/0.txt"));
         Assert.assertEquals("Contents of file 1", makeHttpGetRequest("/dataset/1.txt"));
+    }
+
+    public static int getRandomUnusedPort() {
+
+        final int port;
+        ServerSocket socket = null;
+
+        try {
+            socket = new ServerSocket(0);
+            port = socket.getLocalPort();
+
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException ioe) {
+                    throw new RuntimeException(ioe);
+                }
+            }
+        }
+
+        return port;
     }
 }
