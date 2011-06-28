@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.joshdevins.hadoop.utils.io.FileUtils;
-import net.joshdevins.hadoop.utils.io.SequenceFileToMapFile;
 import net.joshdevins.hadoop.utils.io.converter.FilesIntoSequenceFile;
 
 import org.apache.hadoop.conf.Configuration;
