@@ -103,6 +103,7 @@ import org.eclipse.jetty.server.Request;
  */
 public class JettyMapFileHandler extends AbstractJettyHdfsFileHandler {
 
+    @SuppressWarnings("unused")
     private final Map<String, Map<String, String>> primaryIndices;
 
     /**
