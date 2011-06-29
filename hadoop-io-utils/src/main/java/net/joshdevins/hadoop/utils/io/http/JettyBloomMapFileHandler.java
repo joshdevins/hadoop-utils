@@ -32,6 +32,8 @@ import com.google.common.collect.MapMaker;
  * {@link BloomMapFile}. This is pretty simple in that it will just iterate over all the bloom filters for that dataset
  * and test for the file. Not efficient, but simple.
  * 
+ * TODO: delete or refresh changed datasets
+ * 
  * @author Josh Devins
  */
 public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
@@ -131,6 +133,8 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         response.setStatus(HttpServletResponse.SC_OK);
         try {
             response.getOutputStream().write(bytes);
+            response.getOutputStream().flush();
+
         } catch (IOException ioe) {
             throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Error writing file bytes to output stream", ioe);

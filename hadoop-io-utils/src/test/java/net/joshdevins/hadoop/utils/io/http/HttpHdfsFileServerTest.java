@@ -1,8 +1,7 @@
 package net.joshdevins.hadoop.utils.io.http;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -72,6 +71,12 @@ public class HttpHdfsFileServerTest {
 
     public String makeHttpGetRequest(final String path) throws IOException {
 
+        byte[] bytes = FileUtils.getBytesFromInputStream(makeHttpGetRequestRaw(path));
+        return new String(bytes);
+    }
+
+    public InputStream makeHttpGetRequestRaw(final String path) throws IOException {
+
         URL url = new URL("http://localhost:" + port + path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -81,16 +86,25 @@ public class HttpHdfsFileServerTest {
 
         connection.connect();
 
-        // get response
-        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        StringBuilder sb = new StringBuilder();
-        String line = null;
-
-        while ((line = br.readLine()) != null) {
-            sb.append(line);
+        if (connection.getResponseCode() >= 400) {
+            return connection.getErrorStream();
         }
 
-        return sb.toString();
+        return connection.getInputStream();
+    }
+
+    @Test
+    public void testCustom404() throws Exception {
+
+        byte[] expected = FileUtils.getBytesFromResource("/images/black.png");
+        byte[] actual = FileUtils.getBytesFromInputStream(makeHttpGetRequestRaw("/dataset/foo.txt?404=black"));
+
+        Assert.assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    public void testNormal404() throws Exception {
+        Assert.assertTrue(makeHttpGetRequest("/dataset/foo.txt").contains("404"));
     }
 
     @Test

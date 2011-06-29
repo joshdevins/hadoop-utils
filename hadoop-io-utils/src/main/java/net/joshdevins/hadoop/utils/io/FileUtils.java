@@ -1,9 +1,12 @@
 package net.joshdevins.hadoop.utils.io;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.commons.lang.Validate;
 
 /**
  * Simple file based utilities for regular filesystems.
@@ -73,53 +76,38 @@ public final class FileUtils {
         return deleteDirectory(new File(directory));
     }
 
-    /**
-     * Loads a file into a byte[].
-     * 
-     * @see http://www.exampledepot.com/egs/java.io/File2ByteArray.html
-     */
     public static byte[] getBytesFromFile(final File file) throws IOException {
 
-        InputStream is = new FileInputStream(file);
+        Validate.notNull(file);
+        return getBytesFromInputStream(new FileInputStream(file));
+    }
 
-        // Get the size of the file
-        long length = file.length();
+    /**
+     * Reads bytes from the {@link InputStream}. The input {@link InputStream} will be closed regardless of exceptions.
+     */
+    public static byte[] getBytesFromInputStream(final InputStream is) throws IOException {
 
-        // You cannot create an array using a long type.
-        // It needs to be an int type.
-        // Before converting to an int type, check
-        // to ensure that file is not larger than Integer.MAX_VALUE.
-        if (length > Integer.MAX_VALUE) {
-            // File is too large
-            is.close();
-            throw new IOException("File is too large to fit in an array of max size Integer.MAX_VALUE: " + length);
-        }
+        Validate.notNull(is);
+        BufferedInputStream bis = new BufferedInputStream(is);
 
-        // Create the byte array to hold the data
-        byte[] bytes = new byte[(int) length];
-
-        // Read in the bytes
-        int offset = 0;
-        int numRead = 0;
         try {
-            while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
-                offset += numRead;
-            }
+            byte[] buffer = new byte[bis.available()];
+            bis.read(buffer);
 
-        } catch (IOException ioe) {
-            throw ioe;
+            return buffer;
 
         } finally {
-            // always close input stream no matter what
-            is.close();
+            try {
+                bis.close();
+            } finally {
+                is.close();
+            }
         }
+    }
 
-        // Ensure all the bytes have been read in
-        if (offset < bytes.length) {
-            throw new IOException("Could not read entire file: " + file.getName());
-        }
+    public static byte[] getBytesFromResource(final String resource) throws IOException {
 
-        // Close the input stream and return bytes
-        return bytes;
+        Validate.notEmpty(resource);
+        return getBytesFromInputStream(FileUtils.class.getResourceAsStream(resource));
     }
 }

@@ -49,18 +49,9 @@ public class JettyBloomMapFileHandlerTest {
     @Test
     public void testHandleWithExceptionTranslation() throws IOException {
 
-        // setup output stream
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ServletOutputStream os = new ServletOutputStream() {
+        ByteArrayOutputStream baos = setupMockOutputStream();
 
-            @Override
-            public void write(final int b) throws IOException {
-                baos.write(b);
-            }
-        };
-        Mockito.when(mockResponse.getOutputStream()).thenReturn(os);
-
-        // this sequence of file gets causes last file to not be found in the bloom filter
+        // this sequence of file gets causes last file to not be found in the bloom filter from a Hadoop bug
         handler.handleWithExceptionTranslation("/dataset/1.txt", baseRequest, mockRequest, mockResponse);
         Assert.assertEquals("Contents of file 1", baos.toString());
         baos.reset();
@@ -96,5 +87,22 @@ public class JettyBloomMapFileHandlerTest {
         Pair<String, String> pair = handler.splitTargetIntoDatasetAndFilename("a/b");
         Assert.assertEquals("a", pair.getA());
         Assert.assertEquals("b", pair.getB());
+    }
+
+    private ByteArrayOutputStream setupMockOutputStream() throws IOException {
+
+        // setup output stream
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ServletOutputStream os = new ServletOutputStream() {
+
+            @Override
+            public void write(final int b) throws IOException {
+                baos.write(b);
+            }
+        };
+
+        Mockito.when(mockResponse.getOutputStream()).thenReturn(os);
+
+        return baos;
     }
 }

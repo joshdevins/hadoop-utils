@@ -2,11 +2,17 @@ package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import net.joshdevins.hadoop.utils.io.FileUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -31,6 +37,8 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
         MIME_TYPES_MAP.addMimeTypes("image/png png PNG");
     }
 
+    private final Map<String, byte[]> errorImages = new HashMap<String, byte[]>();
+
     private final String rootPathInFileSystem;
 
     private final Configuration conf;
@@ -53,6 +61,11 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
         Validate.isTrue(fileStatus.isDir(), "Root path in filesystem is not a directory: " + rootPathInFileSystem);
 
         this.rootPathInFileSystem = rootPathInFileSystem;
+
+        // load error images
+        addErrorImage("black");
+        addErrorImage("white");
+        addErrorImage("transparent");
     }
 
     public Configuration getConfiguration() {
@@ -74,12 +87,53 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
             handleWithExceptionTranslation(target, baseRequest, request, response);
         } catch (HttpErrorException hee) {
 
-            response.setContentType("text/html");
             response.setStatus(hee.getStatusCode());
 
-            String errorString = "Error " + hee.getStatusCode();
+            // test to see if we just want to return a known image for this error
+            String errorParam = request.getParameter(String.valueOf(hee.getStatusCode()));
 
-            PrintWriter writer = response.getWriter();
+            if (!StringUtils.isBlank(errorParam) && errorImages.containsKey(errorParam.toLowerCase(Locale.UK))) {
+                handleImageHttpErrorException(errorParam, hee, request, response);
+
+            } else {
+                handleStandardHttpErrorException(hee, request, response);
+            }
+
+            ((Request) request).setHandled(true);
+        }
+    }
+
+    protected abstract void handleWithExceptionTranslation(final String target, final Request baseRequest,
+            final HttpServletRequest request, final HttpServletResponse response);
+
+    private void addErrorImage(final String imageName) throws IOException {
+        errorImages.put(imageName, FileUtils.getBytesFromResource("/images/" + imageName + ".png"));
+    }
+
+    private void handleImageHttpErrorException(final String errorParam, final HttpErrorException hee,
+            final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+
+        response.setContentType("image/png");
+        ServletOutputStream os = response.getOutputStream();
+
+        try {
+            os.write(errorImages.get(errorParam));
+            os.flush();
+        } finally {
+            os.close();
+        }
+    }
+
+    private void handleStandardHttpErrorException(final HttpErrorException hee, final HttpServletRequest request,
+            final HttpServletResponse response) throws IOException {
+
+        response.setContentType("text/html");
+
+        String errorString = "Error " + hee.getStatusCode();
+
+        PrintWriter writer = response.getWriter();
+
+        try {
             writer.println("<html><head><title>" + errorString + "</title></head><body>");
             writer.println("<h2>" + errorString + "</h2>");
 
@@ -103,12 +157,11 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
 
             writer.println("</body></html>");
 
-            ((Request) request).setHandled(true);
+            writer.flush();
+        } finally {
+            writer.close();
         }
     }
-
-    protected abstract void handleWithExceptionTranslation(final String target, final Request baseRequest,
-            final HttpServletRequest request, final HttpServletResponse response);
 
     /**
      * A very simple way to check mime-type. If this is not good enough, use something like mime-utils or JMimeMagic.
