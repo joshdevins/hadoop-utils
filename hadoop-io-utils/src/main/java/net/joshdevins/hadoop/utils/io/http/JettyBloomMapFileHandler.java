@@ -2,6 +2,7 @@ package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +18,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BloomMapFile;
 import org.apache.hadoop.io.BloomMapFileReader;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 
+import com.google.common.collect.MapEvictionListener;
 import com.google.common.collect.MapMaker;
 
 /**
@@ -28,8 +31,6 @@ import com.google.common.collect.MapMaker;
  * sub-driectories will ever be accessed since it splits the request URL into two parts: {dataset path}/{file name
  * {@link BloomMapFile}. This is pretty simple in that it will just iterate over all the bloom filters for that dataset
  * and test for the file. Not efficient, but simple.
- * 
- * TODO: Close all readers on server stop and value expiration.
  * 
  * @author Josh Devins
  */
@@ -40,10 +41,34 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
     public JettyBloomMapFileHandler(final String rootPathInFileSystem) throws IOException {
         super(rootPathInFileSystem);
 
+        MapEvictionListener<String, Set<BloomMapFileReader>> mapEvictionListener = new MapEvictionListener<String, Set<BloomMapFileReader>>() {
+
+            @Override
+            public void onEviction(final String key, final Set<BloomMapFileReader> value) {
+                for (BloomMapFileReader reader : value) {
+                    IOUtils.closeStream(reader);
+                }
+            }
+        };
+
         // build an entry expiring (based on access) ConcurrentHashMap with soft referenced values
         // this will enable garbage collection to sweep away values at will
         // this will also do some pre-emptive cleaning if a dataset has not been used recently
-        datasetMap = new MapMaker().softValues().expireAfterAccess(3, TimeUnit.DAYS).makeMap();
+        datasetMap = new MapMaker().softValues().expireAfterAccess(3, TimeUnit.DAYS)
+                .evictionListener(mapEvictionListener).makeMap();
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
+
+        // close any open readers
+        Set<Entry<String, Set<BloomMapFileReader>>> entries = datasetMap.entrySet();
+        for (Entry<String, Set<BloomMapFileReader>> entry : entries) {
+            for (BloomMapFileReader reader : entry.getValue()) {
+                IOUtils.closeStream(reader);
+            }
+        }
     }
 
     @Override

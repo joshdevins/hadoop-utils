@@ -39,11 +39,10 @@ public class HttpHdfsFileServerTest {
 
     private int port;
 
-    @SuppressWarnings("deprecation")
     @After
-    public void after() {
-        // kill runner, this should be more graceful
-        runner.stop();
+    public void after() throws Exception {
+        server.getJettyServer().stop();
+        Thread.sleep(100);
     }
 
     @Before

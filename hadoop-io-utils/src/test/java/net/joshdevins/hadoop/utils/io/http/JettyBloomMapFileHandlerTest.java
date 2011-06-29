@@ -83,6 +83,7 @@ public class JettyBloomMapFileHandlerTest {
 
     @Test
     public void testSplitTarget_Invalid() {
+
         Assert.assertNull(handler.splitTargetIntoDatasetAndFilename("filename.txt"));
         Assert.assertNull(handler.splitTargetIntoDatasetAndFilename("a/"));
         Assert.assertNull(handler.splitTargetIntoDatasetAndFilename("/b"));
