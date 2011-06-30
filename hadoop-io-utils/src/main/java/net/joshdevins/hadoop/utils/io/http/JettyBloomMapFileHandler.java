@@ -23,6 +23,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.util.log.Log;
 
 import com.google.common.collect.MapEvictionListener;
 import com.google.common.collect.MapMaker;
@@ -195,9 +196,11 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
         for (FileStatus fileStatus : files) {
 
-            // skip any raw files since BloomMap files are actually directories
-            // skip any sub-directories for now that are not BloomMapFile directories
-            if (!fileStatus.isDir() || !isBloomMapFile(fileStatus)) {
+            // skip any files that are not BloomMapFile directories
+            if (!isBloomMapFile(fileStatus)) {
+
+                Log.warn("Skipping non-BloomMapFile found in dataset: dataset=" + dataset + "file="
+                        + fileStatus.getPath().getName(), this);
                 continue;
             }
 
@@ -309,6 +312,10 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
      * files named: bloom, index, data
      */
     private boolean isBloomMapFile(final FileStatus fileStatus) {
+
+        if (!fileStatus.isDir()) {
+            return false;
+        }
 
         Path path = fileStatus.getPath();
         try {
