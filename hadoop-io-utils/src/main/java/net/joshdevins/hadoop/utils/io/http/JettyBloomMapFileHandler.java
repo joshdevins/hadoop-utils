@@ -2,6 +2,7 @@ package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -31,8 +32,6 @@ import com.google.common.collect.MapMaker;
  * sub-driectories will ever be accessed since it splits the request URL into two parts: {dataset path}/{file name
  * {@link BloomMapFile}. This is pretty simple in that it will just iterate over all the bloom filters for that dataset
  * and test for the file. Not efficient, but simple.
- * 
- * TODO: delete or refresh changed datasets
  * 
  * @author Josh Devins
  */
@@ -77,67 +76,19 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
     protected void handleWithExceptionTranslation(final String target, final Request baseRequest,
             final HttpServletRequest request, final HttpServletResponse response) {
 
-        // split the target URL into two parts
-        Pair<String, String> splitTarget = splitTargetIntoDatasetAndFilename(target);
-        if (splitTarget == null) {
-            throw new HttpErrorException(HttpServletResponse.SC_NOT_ACCEPTABLE,
-                    "Error splitting target into dataset and filename: " + target);
-        }
+        // check HTTP method
+        String httpMethod = request.getMethod().toUpperCase(Locale.UK);
 
-        String dataset = splitTarget.getA();
-        String filename = splitTarget.getB();
-        String datasetFilenameDebugString = "dataset=" + dataset + " filename=" + filename;
+        if ("DELETE".equals(httpMethod)) {
+            handleDelete(target, baseRequest, request, response);
 
-        // get the readers for this dataset
-        Set<BloomMapFileReader> readers = datasetMap.get(dataset);
+        } else if ("GET".equals(httpMethod)) {
+            handleGet(target, baseRequest, request, response);
 
-        // need to get the readers
-        if (readers == null) {
-            readers = getReadersForDataset(dataset);
+        } else {
 
-            // only need to set it if it still doesn't exist (race conditions, needs fixing?)
-            datasetMap.putIfAbsent(dataset, readers);
-        }
-
-        // have the readers, find the file
-        BytesWritable value = new BytesWritable();
-        Text key = new Text(filename);
-        boolean found = false;
-
-        for (BloomMapFileReader reader : readers) {
-
-            // try to get from the mapfile, internally this hits the bloom filter first
-            try {
-                if (reader.get(key, value) != null) {
-                    found = true;
-                    break;
-                }
-            } catch (IOException ioe) {
-                throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Error looking for filename key in mapfile reader: " + datasetFilenameDebugString, ioe);
-            }
-        }
-
-        // not found? need this since value is already non-null
-        if (!found) {
-            throw new HttpErrorException(HttpServletResponse.SC_NOT_FOUND,
-                    "File was not found in any backing mapfile: " + datasetFilenameDebugString);
-        }
-
-        // get the bytes out of the value, trimmed padding
-        byte[] bytes = new byte[value.getLength()];
-        System.arraycopy(value.getBytes(), 0, bytes, 0, value.getLength());
-
-        // send response with hopefully right content/mime type
-        response.setContentType(getMimeType(filename));
-        response.setStatus(HttpServletResponse.SC_OK);
-        try {
-            response.getOutputStream().write(bytes);
-            response.getOutputStream().flush();
-
-        } catch (IOException ioe) {
-            throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Error writing file bytes to output stream", ioe);
+            throw new HttpErrorException(HttpServletResponse.SC_NOT_ACCEPTABLE, "HTTP method not supported: "
+                    + request.getMethod());
         }
 
         ((Request) request).setHandled(true);
@@ -206,6 +157,90 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         String filename = target.substring(splitAt + 1);
 
         return new Pair<String, String>(dataset, filename);
+    }
+
+    private void handleDelete(final String target, final Request baseRequest, final HttpServletRequest request,
+            final HttpServletResponse response) {
+
+        // full target is the dataset
+        if (!datasetMap.containsKey(target)) {
+            throw new HttpErrorException(HttpServletResponse.SC_NOT_FOUND, "Dataset not found: " + target);
+        }
+
+        // remove and cleanup
+        Set<BloomMapFileReader> readers = datasetMap.remove(target);
+        for (BloomMapFileReader reader : readers) {
+            IOUtils.closeStream(reader);
+        }
+
+        response.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    private void handleGet(final String target, final Request baseRequest, final HttpServletRequest request,
+            final HttpServletResponse response) {
+
+        // split the target URL into two parts
+        Pair<String, String> splitTarget = splitTargetIntoDatasetAndFilename(target);
+        if (splitTarget == null) {
+            throw new HttpErrorException(HttpServletResponse.SC_NOT_ACCEPTABLE,
+                    "Error splitting target into dataset and filename: " + target);
+        }
+
+        String dataset = splitTarget.getA();
+        String filename = splitTarget.getB();
+        String datasetFilenameDebugString = "dataset=" + dataset + " filename=" + filename;
+
+        // get the readers for this dataset
+        Set<BloomMapFileReader> readers = datasetMap.get(dataset);
+
+        // need to get the readers
+        if (readers == null) {
+            readers = getReadersForDataset(dataset);
+
+            // only need to set it if it still doesn't exist (race conditions, needs fixing?)
+            datasetMap.putIfAbsent(dataset, readers);
+        }
+
+        // have the readers, find the file
+        BytesWritable value = new BytesWritable();
+        Text key = new Text(filename);
+        boolean found = false;
+
+        for (BloomMapFileReader reader : readers) {
+
+            // try to get from the mapfile, internally this hits the bloom filter first
+            try {
+                if (reader.get(key, value) != null) {
+                    found = true;
+                    break;
+                }
+            } catch (IOException ioe) {
+                throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Error looking for filename key in mapfile reader: " + datasetFilenameDebugString, ioe);
+            }
+        }
+
+        // not found? need this since value is already non-null
+        if (!found) {
+            throw new HttpErrorException(HttpServletResponse.SC_NOT_FOUND,
+                    "File was not found in any backing mapfile: " + datasetFilenameDebugString);
+        }
+
+        // get the bytes out of the value, trimmed padding
+        byte[] bytes = new byte[value.getLength()];
+        System.arraycopy(value.getBytes(), 0, bytes, 0, value.getLength());
+
+        // send response with hopefully right content/mime type
+        response.setContentType(getMimeType(filename));
+        response.setStatus(HttpServletResponse.SC_OK);
+        try {
+            response.getOutputStream().write(bytes);
+            response.getOutputStream().flush();
+
+        } catch (IOException ioe) {
+            throw new HttpErrorException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Error writing file bytes to output stream", ioe);
+        }
     }
 
     /**
