@@ -62,15 +62,11 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
     private static class DataSet {
 
-        private final String name;
-
         private final Set<BloomMapFileReader> readers;
 
         private final Set<String> notFoundFiles;
 
-        public DataSet(final String name, final Set<BloomMapFileReader> readers) {
-
-            this.name = name;
+        public DataSet(final Set<BloomMapFileReader> readers) {
             this.readers = readers;
             notFoundFiles = new HashSet<String>();
         }
@@ -90,10 +86,6 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
             readers.clear();
             notFoundFiles.clear();
-        }
-
-        public String getName() {
-            return name;
         }
 
         public Set<BloomMapFileReader> getReaders() {
@@ -255,7 +247,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
         // need to get the readers
         if (dataset == null) {
-            dataset = new DataSet(datasetName, getReadersForDataset(datasetName));
+            dataset = new DataSet(getReadersForDataset(datasetName));
 
             // only need to set it if it still doesn't exist (race conditions, needs fixing?)
             datasetMap.putIfAbsent(datasetName, dataset);
