@@ -33,6 +33,8 @@ import com.google.common.collect.MapMaker;
  * {@link BloomMapFile}. This is pretty simple in that it will just iterate over all the bloom filters for that dataset
  * and test for the file. Not efficient, but simple.
  * 
+ * TODO: Add refreshing readers based on modification times of underlying {@link BloomMapFile}s.
+ * 
  * @author Josh Devins
  */
 public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
@@ -220,7 +222,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
             }
         }
 
-        // not found? need this since value is already non-null
+        // not found? need this variable since value is already non-null
         if (!found) {
             throw new HttpErrorException(HttpServletResponse.SC_NOT_FOUND,
                     "File was not found in any backing mapfile: " + datasetFilenameDebugString);
