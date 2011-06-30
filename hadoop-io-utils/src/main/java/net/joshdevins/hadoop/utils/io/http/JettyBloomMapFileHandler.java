@@ -29,9 +29,27 @@ import com.google.common.collect.MapMaker;
 
 /**
  * A {@link Handler} for embedded Jetty to serve files out of {@link BloomMapFile}s. This currently assumes no
- * sub-driectories will ever be accessed since it splits the request URL into two parts: {dataset path}/{file name
- * {@link BloomMapFile}. This is pretty simple in that it will just iterate over all the bloom filters for that dataset
+ * sub-driectories will ever be accessed since it splits the request URL into two parts: {dataset path}/{file name}.
+ * This implementation is pretty simple in that it will just iterate over all the bloom filters for that dataset
  * and test for the file. Not efficient, but simple.
+ * 
+ * <h2>Why?</h2>
+ * <p>
+ * The basic premise is as follows. Serving small files (like images) out of HDFS is pretty much a no-go given the
+ * amount of overhead involved in just storing and managing the little files. We first encountered this when building an
+ * in-house map-tile server to serve tiles built in Hadoop. To work around this problem, we store a whole bunch of files
+ * in multiple {@link BloomMapFile}s (generally a {@link BloomMapFile} per reducer). This server will then do lookups in
+ * the backing {@link BloomMapFile}. The file that is returned from the server will have a MIME type based on the file
+ * extension in the {@link BloomMapFile}'s key.
+ * </p>
+ * 
+ * <h2>Caching</h2>
+ * <p>
+ * Internally this relies on a couple of caching mechanisms. First we store all of the {@link BloomMapFile} readers in a
+ * cache on first access to a dataset. They are expunged from the cache on demand through a "DELETE" HTTP request on the
+ * dataset URL or after 24 hours. Within the readers themselves there are two levels of access. The first is the bloom
+ * filter and the second is the index into the {@link BloomMapFile}.
+ * </p>
  * 
  * TODO: Add refreshing readers based on modification times of underlying {@link BloomMapFile}s.
  * 
