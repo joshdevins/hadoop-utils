@@ -54,6 +54,7 @@ import com.google.common.collect.MapMaker;
  * </p>
  * 
  * TODO: Add refreshing readers based on modification times of underlying {@link BloomMapFile}s.
+ * TODO: Add logging.
  * 
  * @author Josh Devins
  */
@@ -61,10 +62,15 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
     private static class DataSet {
 
+        private final String name;
+
         private final Set<BloomMapFileReader> readers;
+
         private final Set<String> notFoundFiles;
 
-        public DataSet(final String datasetName, final Set<BloomMapFileReader> readers) {
+        public DataSet(final String name, final Set<BloomMapFileReader> readers) {
+
+            this.name = name;
             this.readers = readers;
             notFoundFiles = new HashSet<String>();
         }
@@ -74,13 +80,20 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         }
 
         /**
-         * Closes readers.
+         * Closes readers, general cleanup.
          */
         public void cleanup() {
 
             for (BloomMapFileReader reader : readers) {
                 IOUtils.closeStream(reader);
             }
+
+            readers.clear();
+            notFoundFiles.clear();
+        }
+
+        public String getName() {
+            return name;
         }
 
         public Set<BloomMapFileReader> getReaders() {
@@ -137,7 +150,6 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
             handleGet(target, baseRequest, request, response);
 
         } else {
-
             throw new HttpErrorException(HttpServletResponse.SC_NOT_ACCEPTABLE, "HTTP method not supported: "
                     + request.getMethod());
         }
@@ -145,7 +157,23 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         ((Request) request).setHandled(true);
     }
 
-    Set<BloomMapFileReader> getReadersForDataset(final String dataset) {
+    Pair<String, String> splitTargetIntoDatasetAndFilename(final String target) {
+
+        // break the request URI into two parts: dataset path, filename in map file
+        int splitAt = StringUtils.lastIndexOf(target, '/');
+
+        // ensure split is possible
+        if (splitAt < 1 || splitAt == target.length() - 1) {
+            return null;
+        }
+
+        String dataset = target.substring(0, splitAt);
+        String filename = target.substring(splitAt + 1);
+
+        return new Pair<String, String>(dataset, filename);
+    }
+
+    private Set<BloomMapFileReader> getReadersForDataset(final String dataset) {
 
         Set<BloomMapFileReader> readers = new HashSet<BloomMapFileReader>();
 
@@ -192,22 +220,6 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         }
 
         return readers;
-    }
-
-    Pair<String, String> splitTargetIntoDatasetAndFilename(final String target) {
-
-        // break the request URI into two parts: dataset path, filename in map file
-        int splitAt = StringUtils.lastIndexOf(target, '/');
-
-        // ensure split is possible
-        if (splitAt < 1 || splitAt == target.length() - 1) {
-            return null;
-        }
-
-        String dataset = target.substring(0, splitAt);
-        String filename = target.substring(splitAt + 1);
-
-        return new Pair<String, String>(dataset, filename);
     }
 
     private void handleDelete(final String target, final Request baseRequest, final HttpServletRequest request,
