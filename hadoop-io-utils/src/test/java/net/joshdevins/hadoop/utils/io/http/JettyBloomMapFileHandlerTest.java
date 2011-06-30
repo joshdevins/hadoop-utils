@@ -110,6 +110,30 @@ public class JettyBloomMapFileHandlerTest {
     }
 
     @Test
+    public void testHandleWithExceptionTranslation_GET_NotFound() {
+
+        Mockito.when(mockRequest.getMethod()).thenReturn("GET");
+
+        try {
+            handler.handleWithExceptionTranslation("/dataset/foo.txt", baseRequest, mockRequest, mockResponse);
+            Assert.fail("Expected exception");
+
+        } catch (HttpErrorException hee) {
+            Assert.assertEquals(404, hee.getStatusCode());
+            Assert.assertTrue(!hee.getMessage().contains("cached"));
+        }
+
+        try {
+            handler.handleWithExceptionTranslation("/dataset/foo.txt", baseRequest, mockRequest, mockResponse);
+            Assert.fail("Expected exception");
+
+        } catch (HttpErrorException hee) {
+            Assert.assertEquals(404, hee.getStatusCode());
+            Assert.assertTrue(hee.getMessage().contains("cached"));
+        }
+    }
+
+    @Test
     public void testSplitTarget() {
 
         Pair<String, String> pair = handler.splitTargetIntoDatasetAndFilename("dataset/a/b/filename.txt");

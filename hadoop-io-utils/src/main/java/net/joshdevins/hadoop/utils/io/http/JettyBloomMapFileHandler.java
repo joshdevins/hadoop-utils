@@ -1,9 +1,9 @@
 package net.joshdevins.hadoop.utils.io.http;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -47,8 +47,10 @@ import com.google.common.collect.MapMaker;
  * <p>
  * Internally this relies on a couple of caching mechanisms. First we store all of the {@link BloomMapFile} readers in a
  * cache on first access to a dataset. They are expunged from the cache on demand through a "DELETE" HTTP request on the
- * dataset URL or after 24 hours. Within the readers themselves there are two levels of access. The first is the bloom
- * filter and the second is the index into the {@link BloomMapFile}.
+ * dataset URL or after 24 hours of not being accessed. Within the readers themselves there are two levels of access.
+ * The first is the bloom filter and the second is the index into the {@link BloomMapFile}. Any complete misses on a
+ * dataset will also be cached alongside the readers so as to avoid checking all the readers again for a known
+ * non-existent key/value.
  * </p>
  * 
  * TODO: Add refreshing readers based on modification times of underlying {@link BloomMapFile}s.
@@ -57,25 +59,56 @@ import com.google.common.collect.MapMaker;
  */
 public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
-    private final ConcurrentMap<String, Set<BloomMapFileReader>> datasetMap;
+    private static class DataSet {
+
+        private final Set<BloomMapFileReader> readers;
+        private final Set<String> notFoundFiles;
+
+        public DataSet(final String datasetName, final Set<BloomMapFileReader> readers) {
+            this.readers = readers;
+            notFoundFiles = new HashSet<String>();
+        }
+
+        public boolean addNotFoundFile(final String filename) {
+            return notFoundFiles.add(filename);
+        }
+
+        /**
+         * Closes readers.
+         */
+        public void cleanup() {
+
+            for (BloomMapFileReader reader : readers) {
+                IOUtils.closeStream(reader);
+            }
+        }
+
+        public Set<BloomMapFileReader> getReaders() {
+            return readers;
+        }
+
+        public boolean isKnownNotFoundFile(final String filename) {
+            return notFoundFiles.contains(filename);
+        }
+    }
+
+    private final ConcurrentMap<String, DataSet> datasetMap;
 
     public JettyBloomMapFileHandler(final String rootPathInFileSystem) throws IOException {
         super(rootPathInFileSystem);
 
-        MapEvictionListener<String, Set<BloomMapFileReader>> mapEvictionListener = new MapEvictionListener<String, Set<BloomMapFileReader>>() {
+        MapEvictionListener<String, DataSet> mapEvictionListener = new MapEvictionListener<String, DataSet>() {
 
             @Override
-            public void onEviction(final String key, final Set<BloomMapFileReader> value) {
-                for (BloomMapFileReader reader : value) {
-                    IOUtils.closeStream(reader);
-                }
+            public void onEviction(final String key, final DataSet value) {
+                value.cleanup();
             }
         };
 
         // build an entry expiring (based on access) ConcurrentHashMap with soft referenced values
         // this will enable garbage collection to sweep away values at will
         // this will also do some pre-emptive cleaning if a dataset has not been used recently
-        datasetMap = new MapMaker().softValues().expireAfterAccess(3, TimeUnit.DAYS)
+        datasetMap = new MapMaker().softValues().expireAfterAccess(1, TimeUnit.DAYS)
                 .evictionListener(mapEvictionListener).makeMap();
     }
 
@@ -84,11 +117,9 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         super.doStop();
 
         // close any open readers
-        Set<Entry<String, Set<BloomMapFileReader>>> entries = datasetMap.entrySet();
-        for (Entry<String, Set<BloomMapFileReader>> entry : entries) {
-            for (BloomMapFileReader reader : entry.getValue()) {
-                IOUtils.closeStream(reader);
-            }
+        Collection<DataSet> datasets = datasetMap.values();
+        for (DataSet dataset : datasets) {
+            dataset.cleanup();
         }
     }
 
@@ -188,10 +219,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         }
 
         // remove and cleanup
-        Set<BloomMapFileReader> readers = datasetMap.remove(target);
-        for (BloomMapFileReader reader : readers) {
-            IOUtils.closeStream(reader);
-        }
+        datasetMap.remove(target).cleanup();
 
         response.setStatus(HttpServletResponse.SC_OK);
     }
@@ -206,19 +234,27 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
                     "Error splitting target into dataset and filename: " + target);
         }
 
-        String dataset = splitTarget.getA();
+        String datasetName = splitTarget.getA();
         String filename = splitTarget.getB();
-        String datasetFilenameDebugString = "dataset=" + dataset + " filename=" + filename;
+        String datasetFilenameDebugString = "dataset=" + datasetName + " filename=" + filename;
 
         // get the readers for this dataset
-        Set<BloomMapFileReader> readers = datasetMap.get(dataset);
+        DataSet dataset = datasetMap.get(datasetName);
 
         // need to get the readers
-        if (readers == null) {
-            readers = getReadersForDataset(dataset);
+        if (dataset == null) {
+            dataset = new DataSet(datasetName, getReadersForDataset(datasetName));
 
             // only need to set it if it still doesn't exist (race conditions, needs fixing?)
-            datasetMap.putIfAbsent(dataset, readers);
+            datasetMap.putIfAbsent(datasetName, dataset);
+
+        } else {
+
+            // check immediately for a known miss
+            if (dataset.isKnownNotFoundFile(filename)) {
+                throw new HttpErrorException(HttpServletResponse.SC_NOT_FOUND,
+                        "File was not found in any backing mapfile (cached 404): " + datasetFilenameDebugString);
+            }
         }
 
         // have the readers, find the file
@@ -226,7 +262,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
         Text key = new Text(filename);
         boolean found = false;
 
-        for (BloomMapFileReader reader : readers) {
+        for (BloomMapFileReader reader : dataset.getReaders()) {
 
             // try to get from the mapfile, internally this hits the bloom filter first
             try {
@@ -242,6 +278,7 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
         // not found? need this variable since value is already non-null
         if (!found) {
+            dataset.addNotFoundFile(filename);
             throw new HttpErrorException(HttpServletResponse.SC_NOT_FOUND,
                     "File was not found in any backing mapfile: " + datasetFilenameDebugString);
         }
