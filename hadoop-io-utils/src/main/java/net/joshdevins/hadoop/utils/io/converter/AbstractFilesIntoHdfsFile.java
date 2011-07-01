@@ -17,8 +17,7 @@ import org.apache.hadoop.io.Text;
 
 /**
  * Copies all files from a local directory into some sort of HDFS file (dependent on implementation). In the final
- * output HDFS file, the key is
- * a {@link Text} filename, the value is a {@link BytesWritable} of bytes from the file.
+ * output HDFS file, the key is a {@link Text} filename, the value is a {@link BytesWritable} of bytes from the file.
  * 
  * <p>
  * Any file that is not readable will be skipped. Sub-directories are not recursed into.
@@ -137,6 +136,6 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> {
             MainUtils.exitWithError("No input files to process in directory: " + input);
         }
 
-        return inputFiles;
+        return FileUtils.sortFiles(inputFiles);
     }
 }

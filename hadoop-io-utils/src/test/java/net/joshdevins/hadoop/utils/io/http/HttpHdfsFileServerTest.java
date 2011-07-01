@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.URL;
 
 import net.joshdevins.hadoop.utils.io.FileUtils;
+import net.joshdevins.hadoop.utils.io.IOUtils;
 import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
 
 import org.junit.After;
@@ -71,7 +72,7 @@ public class HttpHdfsFileServerTest {
 
     public String makeHttpGetRequest(final String path) throws IOException {
 
-        byte[] bytes = FileUtils.getBytesFromInputStream(makeHttpGetRequestRaw(path));
+        byte[] bytes = IOUtils.getBytesFromInputStream(makeHttpGetRequestRaw(path));
         return new String(bytes);
     }
 
@@ -96,8 +97,8 @@ public class HttpHdfsFileServerTest {
     @Test
     public void testCustom404() throws Exception {
 
-        byte[] expected = FileUtils.getBytesFromResource("/images/black.png");
-        byte[] actual = FileUtils.getBytesFromInputStream(makeHttpGetRequestRaw("/dataset/foo.txt?404=black"));
+        byte[] expected = IOUtils.getBytesFromResource("/images/black.png");
+        byte[] actual = IOUtils.getBytesFromInputStream(makeHttpGetRequestRaw("/dataset/foo.txt?404=black"));
 
         Assert.assertArrayEquals(expected, actual);
     }

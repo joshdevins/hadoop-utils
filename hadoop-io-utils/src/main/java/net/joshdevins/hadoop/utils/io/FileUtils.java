@@ -1,10 +1,10 @@
 package net.joshdevins.hadoop.utils.io;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import org.apache.commons.lang.Validate;
 
@@ -79,35 +79,23 @@ public final class FileUtils {
     public static byte[] getBytesFromFile(final File file) throws IOException {
 
         Validate.notNull(file);
-        return getBytesFromInputStream(new FileInputStream(file));
+        return IOUtils.getBytesFromInputStream(new FileInputStream(file));
     }
 
     /**
-     * Reads bytes from the {@link InputStream}. The input {@link InputStream} will be closed regardless of exceptions.
+     * Sorts an array of files by filename, ascending.
      */
-    public static byte[] getBytesFromInputStream(final InputStream is) throws IOException {
+    public static File[] sortFiles(final File[] files) {
 
-        Validate.notNull(is);
-        BufferedInputStream bis = new BufferedInputStream(is);
+        File[] rtn = Arrays.copyOf(files, files.length);
+        Arrays.sort(rtn, new Comparator<File>() {
 
-        try {
-            byte[] buffer = new byte[bis.available()];
-            bis.read(buffer);
-
-            return buffer;
-
-        } finally {
-            try {
-                bis.close();
-            } finally {
-                is.close();
+            @Override
+            public int compare(final File file1, final File file2) {
+                return file1.getName().compareTo(file2.getName());
             }
-        }
-    }
+        });
 
-    public static byte[] getBytesFromResource(final String resource) throws IOException {
-
-        Validate.notEmpty(resource);
-        return getBytesFromInputStream(FileUtils.class.getResourceAsStream(resource));
+        return rtn;
     }
 }

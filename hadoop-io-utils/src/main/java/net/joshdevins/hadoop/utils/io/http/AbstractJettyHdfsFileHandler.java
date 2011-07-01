@@ -12,7 +12,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.joshdevins.hadoop.utils.io.FileUtils;
+import net.joshdevins.hadoop.utils.io.IOUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -107,7 +107,7 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
             final HttpServletRequest request, final HttpServletResponse response);
 
     private void addErrorImage(final String imageName) throws IOException {
-        errorImages.put(imageName, FileUtils.getBytesFromResource("/images/" + imageName + ".png"));
+        errorImages.put(imageName, IOUtils.getBytesFromResource("/images/" + imageName + ".png"));
     }
 
     private void handleImageHttpErrorException(final String errorParam, final HttpErrorException hee,

@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import net.joshdevins.hadoop.utils.io.Pair;
-import net.joshdevins.hadoop.utils.io.converter.FilesIntoSequenceFile;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
