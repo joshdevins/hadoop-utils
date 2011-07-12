@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.URL;
 
+import net.joshdevins.hadoop.utils.MainUtils;
 import net.joshdevins.hadoop.utils.io.FileUtils;
 import net.joshdevins.hadoop.utils.io.IOUtils;
 import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
@@ -46,13 +47,12 @@ public class HttpHdfsFileServerTest {
     }
 
     @Before
-    public void before() throws InterruptedException {
+    public void before() throws Exception {
 
         // create BloomMapFiles from plain text files
         FileUtils.createDirectoryDestructive(TEST_ROOT);
-        FilesIntoBloomMapFile setup = new FilesIntoBloomMapFile("src/test/resources/input", TEST_ROOT
-                + "/dataset/bloom.map");
-        setup.run();
+        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input",
+                TEST_ROOT + "/dataset/bloom.map" });
 
         // create the server
         port = getRandomUnusedPort();

@@ -7,8 +7,9 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.joshdevins.hadoop.utils.MainUtils;
+import net.joshdevins.hadoop.utils.Pair;
 import net.joshdevins.hadoop.utils.io.FileUtils;
-import net.joshdevins.hadoop.utils.io.Pair;
 import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
 
 import org.apache.hadoop.conf.Configuration;
@@ -39,7 +40,7 @@ public class JettyBloomMapFileHandlerTest {
     private HttpServletResponse mockResponse;
 
     @Before
-    public void before() throws IOException {
+    public void before() throws Exception {
 
         FileUtils.createDirectoryDestructive(TEST_OUTPUT);
         handler = new JettyBloomMapFileHandler(TEST_OUTPUT);
@@ -50,8 +51,8 @@ public class JettyBloomMapFileHandlerTest {
         mockResponse = Mockito.mock(HttpServletResponse.class);
 
         // move text files into BloomMapFile in test output directory
-        FilesIntoBloomMapFile runner = new FilesIntoBloomMapFile("src/test/resources/input", TEST_BLOOMMAPFILE);
-        runner.run();
+        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input",
+                TEST_BLOOMMAPFILE });
     }
 
     @Test

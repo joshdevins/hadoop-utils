@@ -1,4 +1,4 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils;
 
 /**
  * A simple tuple-like object to hold a pair of objects like key and value.

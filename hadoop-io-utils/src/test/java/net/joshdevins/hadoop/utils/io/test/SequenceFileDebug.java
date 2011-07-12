@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import net.joshdevins.hadoop.utils.Pair;
 import net.joshdevins.hadoop.utils.io.HdfsUtils;
-import net.joshdevins.hadoop.utils.io.Pair;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;

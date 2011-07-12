@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.joshdevins.hadoop.utils.Pair;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

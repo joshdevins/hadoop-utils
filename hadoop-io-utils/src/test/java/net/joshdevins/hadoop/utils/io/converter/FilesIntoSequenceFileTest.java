@@ -5,7 +5,8 @@ import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.joshdevins.hadoop.utils.io.Pair;
+import net.joshdevins.hadoop.utils.MainUtils;
+import net.joshdevins.hadoop.utils.Pair;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -22,15 +23,15 @@ public class FilesIntoSequenceFileTest {
     private static final String TEST_OUTPUT = "target/test/output/FilesIntoSequenceFileTest/file.seq";
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadArgs() {
-        new FilesIntoSequenceFile(null, null);
+    public void testBadArgs() throws Exception {
+        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "", "" });
     }
 
     @Test
-    public void testRun() throws IOException {
+    public void testRun() throws Exception {
 
-        FilesIntoSequenceFile runner = new FilesIntoSequenceFile("src/test/resources/input", TEST_OUTPUT);
-        runner.run();
+        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "src/test/resources/input",
+                TEST_OUTPUT });
         List<Pair<String, String>> entries = readSequenceFile(TEST_OUTPUT);
 
         Assert.assertNotNull(entries);

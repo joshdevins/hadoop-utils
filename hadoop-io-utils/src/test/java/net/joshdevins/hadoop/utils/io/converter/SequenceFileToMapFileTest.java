@@ -5,8 +5,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.joshdevins.hadoop.utils.MainUtils;
 import net.joshdevins.hadoop.utils.io.FileUtils;
-import net.joshdevins.hadoop.utils.io.converter.FilesIntoSequenceFile;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,19 +37,19 @@ public class SequenceFileToMapFileTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadArgs() {
-        SequenceFileToMapFile.run(null, null);
+    public void testBadArgs() throws Exception {
+        SequenceFileToMapFile.main(new String[] { "", "" });
     }
 
     @Test
-    public void testRun() throws IOException {
+    public void testRun() throws Exception {
 
         // build a SequenceFile from a bunch of text files
-        FilesIntoSequenceFile runner = new FilesIntoSequenceFile("src/test/resources/input", TEST_INPUT);
-        runner.run();
+        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "src/test/resources/input",
+                TEST_INPUT });
 
         // convert it to a MapFile
-        SequenceFileToMapFile.run(TEST_INPUT, TEST_OUTPUT);
+        MainUtils.toolRunnerWithoutExit(new SequenceFileToMapFile(), new String[] { TEST_INPUT, TEST_OUTPUT });
 
         // verify MapFile contents
         Map<String, String> map = readMapFile(TEST_OUTPUT, TEST_FILES);

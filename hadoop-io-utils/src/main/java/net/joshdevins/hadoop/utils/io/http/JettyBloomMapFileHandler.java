@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.joshdevins.hadoop.utils.io.Pair;
+import net.joshdevins.hadoop.utils.Pair;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;

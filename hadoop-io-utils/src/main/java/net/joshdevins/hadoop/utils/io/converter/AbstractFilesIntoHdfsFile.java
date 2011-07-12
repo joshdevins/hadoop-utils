@@ -5,19 +5,22 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
+import net.joshdevins.hadoop.utils.MainUtils;
 import net.joshdevins.hadoop.utils.io.FileUtils;
-import net.joshdevins.hadoop.utils.io.MainUtils;
 
 import org.apache.commons.lang.Validate;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.Tool;
 
 /**
  * Copies all files from a local directory into some sort of HDFS file (dependent on implementation). In the final
  * output HDFS file, the key is a {@link Text} filename, the value is a {@link BytesWritable} of bytes from the file.
+ * The output filesystem is dependent on the standard Hadoop configuration (that is, if a config file is set with
+ * <code>-conf</code>, it will be used).
  * 
  * <p>
  * Any file that is not readable will be skipped. Sub-directories are not recursed into.
@@ -28,30 +31,11 @@ import org.apache.hadoop.io.Text;
  * 
  * @author Josh Devins
  */
-public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> {
+public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> extends Configured implements Tool {
 
-    private final String input;
+    private String input;
 
-    private final String output;
-
-    private final Configuration config;
-
-    /**
-     * Default constructor.
-     */
-    public AbstractFilesIntoHdfsFile(final String input, final String output, final String usage) {
-
-        Validate.notEmpty(input, usage);
-        Validate.notEmpty(output, usage);
-
-        this.input = input;
-        this.output = output;
-        this.config = new Configuration();
-    }
-
-    public Configuration getConfig() {
-        return config;
-    }
+    private String output;
 
     public String getInput() {
         return input;
@@ -61,14 +45,21 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> {
         return output;
     }
 
-    public void run() {
+    @Override
+    public int run(final String[] args) throws Exception {
+
+        input = args[0];
+        output = args[1];
+
+        Validate.notEmpty(input, getUsage());
+        Validate.notEmpty(output, getUsage());
 
         File[] inputFiles = getInputFiles(input);
 
         // setup output file, no compression
         W writer = null;
         try {
-            FileSystem outputFS = FileSystem.get(URI.create(output), config);
+            FileSystem outputFS = FileSystem.get(URI.create(output), getConf());
             writer = createWriter(outputFS);
 
         } catch (IOException ioe) {
@@ -92,11 +83,15 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> {
         }
 
         IOUtils.closeStream(writer);
+
+        return 0;
     }
 
     protected abstract void appendFilenameAndBytesToWriter(String key, byte[] bytes, W writer) throws IOException;
 
     protected abstract W createWriter(FileSystem outputFS) throws IOException;
+
+    protected abstract String getUsage();
 
     private boolean appendFileToWriter(final File file, final W writer) {
 
@@ -107,7 +102,7 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> {
             bytes = FileUtils.getBytesFromFile(file);
 
         } catch (IOException ioe) {
-            MainUtils.printStackTraceAndError(ioe, "Failed to read file: " + key);
+            MainUtils.printStackTraceAndError("Failed to read file: " + key, ioe);
             return false;
         }
 
@@ -115,7 +110,7 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> {
             appendFilenameAndBytesToWriter(key, bytes, writer);
 
         } catch (IOException ioe) {
-            MainUtils.printStackTraceAndError(ioe, "Failed to append to output SequenceFile");
+            MainUtils.printStackTraceAndError("Failed to append to output SequenceFile", ioe);
             return false;
         }
 

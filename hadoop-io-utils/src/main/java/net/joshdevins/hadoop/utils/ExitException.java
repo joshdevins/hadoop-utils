@@ -1,4 +1,4 @@
-package net.joshdevins.hadoop.utils.io;
+package net.joshdevins.hadoop.utils;
 
 /**
  * Signal exception for an abnormal exit from a main method. Basically only useful for unit testing main methods.

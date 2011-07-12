@@ -1,9 +1,8 @@
 package net.joshdevins.hadoop.utils.io.converter;
 
-import java.io.IOException;
 import java.net.URI;
 
-import net.joshdevins.hadoop.utils.io.converter.FilesIntoBloomMapFile;
+import net.joshdevins.hadoop.utils.MainUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,15 +18,15 @@ public class FilesIntoBloomMapFileTest {
     private static final String TEST_OUTPUT = "target/test/output/FilesIntoBloomMapFileTest/file.map";
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadArgs() {
-        new FilesIntoBloomMapFile(null, null);
+    public void testBadArgs() throws Exception {
+        FilesIntoBloomMapFile.main(new String[] { "", "" });
     }
 
     @Test
-    public void testRun() throws IOException {
+    public void testRun() throws Exception {
 
-        FilesIntoBloomMapFile runner = new FilesIntoBloomMapFile("src/test/resources/input", TEST_OUTPUT);
-        runner.run();
+        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input",
+                TEST_OUTPUT });
 
         // test results
         Configuration conf = new Configuration();
