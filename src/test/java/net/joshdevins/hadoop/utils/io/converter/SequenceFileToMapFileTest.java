@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.joshdevins.hadoop.utils.ExitException;
 import net.joshdevins.hadoop.utils.MainUtils;
 import net.joshdevins.hadoop.utils.io.FileUtils;
 
@@ -36,9 +37,9 @@ public class SequenceFileToMapFileTest {
         FileUtils.deleteDirectory(WORK_DIR);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ExitException.class)
     public void testBadArgs() throws Exception {
-        SequenceFileToMapFile.main(new String[] { "", "" });
+        MainUtils.toolRunnerWithoutExit(new SequenceFileToMapFile(), new String[] { "", "" });
     }
 
     @Test

@@ -8,7 +8,6 @@ import java.net.URI;
 import net.joshdevins.hadoop.utils.MainUtils;
 import net.joshdevins.hadoop.utils.io.FileUtils;
 
-import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.BytesWritable;
@@ -48,11 +47,10 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> extends Con
     @Override
     public int run(final String[] args) throws Exception {
 
+        MainUtils.validateStandardInputOutputDriver(getImplClass(), args);
+
         input = args[0];
         output = args[1];
-
-        Validate.notEmpty(input, getUsage());
-        Validate.notEmpty(output, getUsage());
 
         File[] inputFiles = getInputFiles(input);
 
@@ -91,7 +89,7 @@ public abstract class AbstractFilesIntoHdfsFile<W extends Closeable> extends Con
 
     protected abstract W createWriter(FileSystem outputFS) throws IOException;
 
-    protected abstract String getUsage();
+    protected abstract Class<?> getImplClass();
 
     private boolean appendFileToWriter(final File file, final W writer) {
 

@@ -1,7 +1,8 @@
 package net.joshdevins.hadoop.utils;
 
-
+import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -42,5 +43,22 @@ public final class MainUtils {
 
     public static int toolRunnerWithoutExit(final Tool tool, final String[] args) throws Exception {
         return ToolRunner.run(new Configuration(), tool, args);
+    }
+
+    public static void validateStandardInputOutputDriver(final Class<?> clazz, final String[] args) {
+
+        try {
+            Validate.notNull(args);
+            Validate.isTrue(args.length == 2);
+
+            Validate.notEmpty(args[0]);
+            Validate.notEmpty(args[1]);
+
+        } catch (IllegalArgumentException iae) {
+
+            System.err.printf("Usage: %s [generic options] <input> <output>\n", clazz.getSimpleName()); // NOPMD
+            GenericOptionsParser.printGenericCommandUsage(System.err);
+            throw new ExitException("Illegal argument expcetion");
+        }
     }
 }

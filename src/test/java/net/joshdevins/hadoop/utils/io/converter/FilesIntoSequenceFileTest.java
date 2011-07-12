@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.joshdevins.hadoop.utils.ExitException;
 import net.joshdevins.hadoop.utils.MainUtils;
 import net.joshdevins.hadoop.utils.Pair;
 
@@ -22,7 +23,7 @@ public class FilesIntoSequenceFileTest {
 
     private static final String TEST_OUTPUT = "target/test/output/FilesIntoSequenceFileTest/file.seq";
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ExitException.class)
     public void testBadArgs() throws Exception {
         MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "", "" });
     }

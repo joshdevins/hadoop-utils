@@ -20,8 +20,6 @@ import org.apache.hadoop.io.Text;
  */
 public final class FilesIntoSequenceFile extends AbstractFilesIntoHdfsFile<SequenceFile.Writer> {
 
-    private static final String USAGE = "Usage: FilesIntoSequenceFile <input directory> <output SequenceFile>";
-
     @Override
     protected void appendFilenameAndBytesToWriter(final String key, final byte[] bytes, final SequenceFile.Writer writer)
             throws IOException {
@@ -37,8 +35,8 @@ public final class FilesIntoSequenceFile extends AbstractFilesIntoHdfsFile<Seque
     }
 
     @Override
-    protected String getUsage() {
-        return USAGE;
+    protected Class<?> getImplClass() {
+        return FilesIntoSequenceFile.class;
     }
 
     public static void main(final String[] args) throws Exception {

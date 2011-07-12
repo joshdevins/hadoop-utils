@@ -3,11 +3,8 @@ package net.joshdevins.hadoop.utils.io.converter;
 import java.io.IOException;
 import java.net.URI;
 
-import net.joshdevins.hadoop.utils.ExitException;
 import net.joshdevins.hadoop.utils.MainUtils;
 
-import org.apache.commons.lang.Validate;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -15,12 +12,11 @@ import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 /**
  * Converts a {@link SequenceFile} into a {@link MapFile}. This will move the input {@link SequenceFile} to the location
- * specified by the output {@link MapFile}. The filesystem to operate on is specified by the input, so you must stay
- * within the same filesystem (i.e. local-to-local, HDFS-to-HDFS).
+ * specified by the output {@link MapFile}. The filesystem to operate on is specified by the input and the standard
+ * Hadoop configuration mechanisms.
  * 
  * Example:
  * <ul>
@@ -35,39 +31,19 @@ import org.apache.hadoop.util.ToolRunner;
  */
 public final class SequenceFileToMapFile extends Configured implements Tool {
 
-    private static final String USAGE = "Usage: SequenceFileToMapFile <input SequenceFile> <output MapFile> <mv|cp>";
-
     @Override
+    @SuppressWarnings("unchecked")
     public int run(final String[] args) throws Exception {
 
-        Validate.notNull(args, USAGE);
-        Validate.isTrue(args.length == 2, USAGE);
+        MainUtils.validateStandardInputOutputDriver(SequenceFileToMapFile.class, args);
 
-        run(args[0], args[1]);
-        return 0;
-    }
-
-    public static void main(final String[] args) throws Exception {
-
-        try {
-            ToolRunner.run(new Configuration(), new SequenceFileToMapFile(), args);
-        } catch (ExitException ee) {
-            System.exit(-1);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void run(final String input, final String output) {
-
-        Validate.notEmpty(input, USAGE);
-        Validate.notEmpty(output, USAGE);
-
-        Configuration conf = new Configuration();
+        String input = args[0];
+        String output = args[1];
 
         // setup input and output files
         FileSystem fs = null;
         try {
-            fs = FileSystem.get(URI.create(input), conf);
+            fs = FileSystem.get(URI.create(input), getConf());
         } catch (IOException ioe) {
             MainUtils.exitWithStackTraceAndError("Failed to get FileSystem of input file: " + input, ioe);
         }
@@ -92,7 +68,7 @@ public final class SequenceFileToMapFile extends Configured implements Tool {
         Class<? extends Writable> keyClass = null;
         Class<? extends Writable> valueClass = null;
         try {
-            reader = new SequenceFile.Reader(fs, sequenceFile, conf);
+            reader = new SequenceFile.Reader(fs, sequenceFile, getConf());
             keyClass = (Class<? extends Writable>) reader.getKeyClass();
             valueClass = (Class<? extends Writable>) reader.getValueClass();
 
@@ -120,9 +96,15 @@ public final class SequenceFileToMapFile extends Configured implements Tool {
 
         // create the MapFile index file
         try {
-            MapFile.fix(fs, mapFile, keyClass, valueClass, false, conf);
+            MapFile.fix(fs, mapFile, keyClass, valueClass, false, getConf());
         } catch (Exception e) {
             MainUtils.exitWithStackTraceAndError("Failed to create MapFile index: " + output, e);
         }
+
+        return 0;
+    }
+
+    public static void main(final String[] args) throws Exception {
+        MainUtils.toolRunner(new SequenceFileToMapFile(), args);
     }
 }

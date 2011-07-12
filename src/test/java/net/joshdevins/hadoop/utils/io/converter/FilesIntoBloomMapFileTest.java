@@ -2,6 +2,7 @@ package net.joshdevins.hadoop.utils.io.converter;
 
 import java.net.URI;
 
+import net.joshdevins.hadoop.utils.ExitException;
 import net.joshdevins.hadoop.utils.MainUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -17,9 +18,9 @@ public class FilesIntoBloomMapFileTest {
 
     private static final String TEST_OUTPUT = "target/test/output/FilesIntoBloomMapFileTest/file.map";
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ExitException.class)
     public void testBadArgs() throws Exception {
-        FilesIntoBloomMapFile.main(new String[] { "", "" });
+        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "", "" });
     }
 
     @Test

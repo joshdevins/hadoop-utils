@@ -19,8 +19,6 @@ import org.apache.hadoop.io.Text;
  */
 public final class FilesIntoMapFile extends AbstractFilesIntoHdfsFile<MapFile.Writer> {
 
-    private static final String USAGE = "Usage: FilesIntoBloomMapFile <input directory> <output BloomMapFile>";
-
     @Override
     protected void appendFilenameAndBytesToWriter(final String key, final byte[] bytes, final MapFile.Writer writer)
             throws IOException {
@@ -36,8 +34,8 @@ public final class FilesIntoMapFile extends AbstractFilesIntoHdfsFile<MapFile.Wr
     }
 
     @Override
-    protected String getUsage() {
-        return USAGE;
+    protected Class<?> getImplClass() {
+        return FilesIntoMapFile.class;
     }
 
     public static void main(final String[] args) throws Exception {
