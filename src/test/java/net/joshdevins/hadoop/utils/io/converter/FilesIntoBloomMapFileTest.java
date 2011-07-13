@@ -26,7 +26,7 @@ public class FilesIntoBloomMapFileTest {
     @Test
     public void testRun() throws Exception {
 
-        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input",
+        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input/files",
                 TEST_OUTPUT });
 
         // test results

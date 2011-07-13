@@ -51,7 +51,7 @@ public class HttpHdfsFileServerTest {
 
         // create BloomMapFiles from plain text files
         FileUtils.createDirectoryDestructive(TEST_ROOT);
-        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input",
+        MainUtils.toolRunnerWithoutExit(new FilesIntoBloomMapFile(), new String[] { "src/test/resources/input/files",
                 TEST_ROOT + "/dataset/bloom.map" });
 
         // create the server

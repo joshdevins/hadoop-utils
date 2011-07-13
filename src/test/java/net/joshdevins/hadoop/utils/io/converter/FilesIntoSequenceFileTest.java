@@ -31,7 +31,7 @@ public class FilesIntoSequenceFileTest {
     @Test
     public void testRun() throws Exception {
 
-        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "src/test/resources/input",
+        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "src/test/resources/input/files",
                 TEST_OUTPUT });
         List<Pair<String, String>> entries = readSequenceFile(TEST_OUTPUT);
 

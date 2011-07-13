@@ -25,6 +25,11 @@ public final class HdfsUtils {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Reads a {@link SequenceFile} and returns a {@link List} of {@link Pair}s containing the key and value. Note that
+     * this is highly inefficient since it loads everything into memory and requires new key and value class instances
+     * for each row of the {@link SequenceFile}. Generally this should be used only for small-ish {@link SequenceFile}s.
+     */
     @SuppressWarnings("unchecked")
     public static <K extends Writable, V extends Writable> List<Pair<K, V>> readSequenceFile(final FileSystem fs,
             final Path path, final Configuration conf) throws IOException {
@@ -39,6 +44,10 @@ public final class HdfsUtils {
 
             while (reader.next(key, value)) {
                 list.add(new Pair<K, V>(key, value));
+
+                // new instances since they are passed back by reference in Pair and the List
+                key = (K) reader.getKeyClass().newInstance();
+                value = (V) reader.getValueClass().newInstance();
             }
 
         } catch (IllegalAccessException iae) {
@@ -54,10 +63,21 @@ public final class HdfsUtils {
         return list;
     }
 
+    /**
+     * @see #readSequenceFile(FileSystem, Path, Configuration)
+     */
     public static <K extends Writable, V extends Writable> List<Pair<K, V>> readSequenceFile(final String uri)
             throws IOException {
 
-        Configuration conf = new Configuration();
+        return readSequenceFile(uri, new Configuration());
+    }
+
+    /**
+     * @see #readSequenceFile(FileSystem, Path, Configuration)
+     */
+    public static <K extends Writable, V extends Writable> List<Pair<K, V>> readSequenceFile(final String uri,
+            final Configuration conf) throws IOException {
+
         FileSystem fs = FileSystem.get(URI.create(uri), conf);
         Path path = new Path(uri);
 

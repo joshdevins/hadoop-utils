@@ -46,7 +46,7 @@ public class SequenceFileToMapFileTest {
     public void testRun() throws Exception {
 
         // build a SequenceFile from a bunch of text files
-        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "src/test/resources/input",
+        MainUtils.toolRunnerWithoutExit(new FilesIntoSequenceFile(), new String[] { "src/test/resources/input/files",
                 TEST_INPUT });
 
         // convert it to a MapFile
