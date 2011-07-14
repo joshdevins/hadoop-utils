@@ -3,7 +3,6 @@ package net.joshdevins.hadoop.utils.io.http;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.ServerSocket;
 import java.net.URL;
 
 import net.joshdevins.hadoop.utils.MainUtils;
@@ -55,7 +54,7 @@ public class HttpHdfsFileServerTest {
                 TEST_ROOT + "/dataset/bloom.map" });
 
         // create the server
-        port = getRandomUnusedPort();
+        port = IOUtils.getRandomUnusedPort();
         server = new HttpHdfsFileServer(port, TEST_ROOT);
 
         // run the server
@@ -113,30 +112,5 @@ public class HttpHdfsFileServerTest {
 
         Assert.assertEquals("Contents of file 0", makeHttpGetRequest("/dataset/0.txt"));
         Assert.assertEquals("Contents of file 1", makeHttpGetRequest("/dataset/1.txt"));
-    }
-
-    public static int getRandomUnusedPort() {
-
-        final int port;
-        ServerSocket socket = null;
-
-        try {
-            socket = new ServerSocket(0);
-            port = socket.getLocalPort();
-
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException ioe) {
-                    throw new RuntimeException(ioe);
-                }
-            }
-        }
-
-        return port;
     }
 }

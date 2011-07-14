@@ -3,6 +3,7 @@ package net.joshdevins.hadoop.utils.io;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ServerSocket;
 
 import org.apache.commons.lang.Validate;
 
@@ -44,5 +45,33 @@ public final class IOUtils {
 
         Validate.notEmpty(resource);
         return getBytesFromInputStream(FileUtils.class.getResourceAsStream(resource));
+    }
+
+    /**
+     * Gets a random, unused port.
+     */
+    public static int getRandomUnusedPort() {
+
+        final int port;
+        ServerSocket socket = null;
+
+        try {
+            socket = new ServerSocket(0);
+            port = socket.getLocalPort();
+
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException ioe) {
+                    throw new RuntimeException(ioe);
+                }
+            }
+        }
+
+        return port;
     }
 }
