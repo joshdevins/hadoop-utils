@@ -19,32 +19,31 @@ public final class IOUtils {
     }
 
     /**
-     * Reads bytes from the {@link InputStream}. The input {@link InputStream} will be closed regardless of exceptions.
+     * Reads bytes from the {@link InputStream}.
      */
     public static byte[] getBytesFromInputStream(final InputStream is) throws IOException {
 
         Validate.notNull(is);
         BufferedInputStream bis = new BufferedInputStream(is);
 
-        try {
-            byte[] buffer = new byte[bis.available()];
-            bis.read(buffer);
+        byte[] buffer = new byte[bis.available()];
+        bis.read(buffer);
 
-            return buffer;
-
-        } finally {
-            try {
-                bis.close();
-            } finally {
-                is.close();
-            }
-        }
+        return buffer;
     }
 
     public static byte[] getBytesFromResource(final String resource) throws IOException {
 
         Validate.notEmpty(resource);
-        return getBytesFromInputStream(FileUtils.class.getResourceAsStream(resource));
+        InputStream is = FileUtils.class.getResourceAsStream(resource);
+
+        try {
+            return getBytesFromInputStream(is);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
     }
 
     /**

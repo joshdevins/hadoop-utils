@@ -71,8 +71,16 @@ public class HttpHdfsFileServerTest {
 
     public String makeHttpGetRequest(final String path) throws IOException {
 
-        byte[] bytes = IOUtils.getBytesFromInputStream(makeHttpGetRequestRaw(path));
-        return new String(bytes);
+        InputStream is = makeHttpGetRequestRaw(path);
+
+        try {
+            byte[] bytes = IOUtils.getBytesFromInputStream(is);
+            return new String(bytes);
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
     }
 
     public InputStream makeHttpGetRequestRaw(final String path) throws IOException {

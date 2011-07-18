@@ -3,6 +3,7 @@ package net.joshdevins.hadoop.utils.io;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -79,7 +80,15 @@ public final class FileUtils {
     public static byte[] getBytesFromFile(final File file) throws IOException {
 
         Validate.notNull(file);
-        return IOUtils.getBytesFromInputStream(new FileInputStream(file));
+        InputStream fis = new FileInputStream(file);
+
+        try {
+            return IOUtils.getBytesFromInputStream(fis);
+        } finally {
+            if (fis != null) {
+                fis.close();
+            }
+        }
     }
 
     /**
