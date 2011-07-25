@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 /**
@@ -126,6 +127,12 @@ public abstract class AbstractJettyHdfsFileHandler extends AbstractHandler imple
 
     private void handleStandardHttpErrorException(final HttpErrorException hee, final HttpServletRequest request,
             final HttpServletResponse response) throws IOException {
+
+        // check to see if we can actually write anything back or should just log
+        if (((Response) response).isOutputing() && !((Response) response).isWriting()) {
+            System.err.println("Error encountered but could not write to output stream since it's already opened");
+            hee.printStackTrace();
+        }
 
         response.setContentType("text/html");
 
