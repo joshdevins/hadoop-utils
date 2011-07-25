@@ -107,15 +107,16 @@ public class JettyBloomMapFileHandler extends AbstractJettyHdfsFileHandler {
 
             @Override
             public void onEviction(final String key, final DataSet value) {
-                value.cleanup();
+
+                if (value != null) {
+                    value.cleanup();
+                }
             }
         };
 
-        // build an entry expiring (based on access) ConcurrentHashMap with soft referenced values
-        // this will enable garbage collection to sweep away values at will
+        // build an entry expiring (based on access) ConcurrentHashMap with regular referenced values
         // this will also do some pre-emptive cleaning if a dataset has not been used recently
-        datasetMap = new MapMaker().softValues().expireAfterAccess(1, TimeUnit.DAYS)
-                .evictionListener(mapEvictionListener).makeMap();
+        datasetMap = new MapMaker().expireAfterAccess(1, TimeUnit.DAYS).evictionListener(mapEvictionListener).makeMap();
     }
 
     @Override
